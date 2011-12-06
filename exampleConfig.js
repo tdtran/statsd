@@ -4,6 +4,7 @@
   , graphiteHost: "graphite.host.com"
 //, libratoUser: "<librato email>"
 //, libratoApiKey: "<librato api key>"
+//, libratoSource: "loadbalancer-statsd" // optional source
   , batch: 200
   , port: 8125
 }

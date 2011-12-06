@@ -1,3 +1,5 @@
+versionstring = "statsd-librato/1.0"
+
 var dgram      = require('dgram')
   , sys        = require('sys')
   , net        = require('net')
@@ -242,6 +244,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           });
           if (graphServiceIs("librato-metrics")){
             hash["measure_time"] = ts
+            if (config.libratoSource) { hash["source"] = config.libratoSource; }
           }
           return hash;
         };
@@ -301,7 +304,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
               headers: {
                 "Authorization": 'Basic ' + base64.encode(new Buffer(config.libratoUser + ':' + config.libratoApiKey)),
                 "Content-Length": stats_str.length,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent" : versionstring
               }
             };
 
