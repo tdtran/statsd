@@ -97,6 +97,7 @@ Installation and Configuration
 ------------------------------
 
  * Install node.js
+ * Install the 'base64' package via [npm][npm]
  * Clone the project
  * Create a config file from exampleConfig.js and put it somewhere
  * Add connection info for your graphing service to exampleConfig.js
@@ -136,6 +137,7 @@ We'll do our best to get your changes in!
 [blog post]: http://codeascraft.etsy.com/2011/02/15/measure-anything-measure-everything/
 [node]: http://nodejs.org
 [udp]: http://enwp.org/udp
+[npm]: http://npmjs.org
 
 
 Contributors
