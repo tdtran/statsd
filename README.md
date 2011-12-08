@@ -97,7 +97,7 @@ Installation and Configuration
 ------------------------------
 
  * Install node.js
- * Install the 'base64', 'async' and 'underscore' packages via [npm][npm]
+ * Install the 'base64', 'async', 'temp', 'nodeunit' and 'underscore' packages via [npm][npm]
  * Clone the project
  * Create a config file from exampleConfig.js and put it somewhere
  * Add connection info for your graphing service to exampleConfig.js
