@@ -329,6 +329,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             res.on('data', function(d){
               var errdata = "HTTP " + res.statusCode + ": " + d;
               if (retry){
+                if (config.debug) { console.log("received error " + res.statusCode + " connecting to Librato, retrying... "); }
                 setTimeout(function(){
                   submit_to_librato(stats_str,false);
                 }, Math.floor(flushInterval/2) + 100);

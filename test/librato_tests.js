@@ -42,6 +42,8 @@ var collect_for = function(server,timeout,cb){
   var in_flight = 0;
   var start_time = new Date().getTime();
   var collector = function(req,res){
+    res.writeHead(204);
+    res.end();
     in_flight += 1;
     var body = '';
     req.on('data',function(data){ body += data; });
@@ -74,9 +76,10 @@ module.exports = {
                ,  batch: 200 \n\
                ,  flushInterval: " + this.myflush + " \n\
                ,  port: 8125\n\
-               ,  dumpMessages: true \n\
+               ,  dumpMessages: false \n\
                ,  debug: false\n\
                ,  libratoUser: \"test@librato.com\"\n\
+               ,  libratoSnap: 10\n\
                ,  libratoApiKey: \"fakekey\"\n\
                ,  libratoHost: \"http://127.0.0.1:" + this.testport + "\"}";
 
@@ -135,6 +138,8 @@ module.exports = {
 
     // we should integrate a timeout into this
     this.acceptor.once('request',function(req,res){
+        res.writeHead(204);
+        res.end();
         test.equals(req.method,'POST');
         var uri_parts = urlparse(req.url);
         test.equals(uri_parts["pathname"],'/v1/metrics.json')
@@ -169,6 +174,8 @@ module.exports = {
     var testvalue = 100;
     var me = this;
     this.acceptor.once('request',function(req,res){
+      res.writeHead(204);
+      res.end();
       statsd_send('a_test_value:' + testvalue + '|ms',me.sock,'127.0.0.1',8125,function(){
           collect_for(me.acceptor,me.myflush*2,function(strings){
             test.ok(strings.length > 0,'should receive some data');
