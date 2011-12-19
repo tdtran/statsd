@@ -170,7 +170,7 @@ module.exports = {
     var me = this;
     this.acceptor.once('request',function(req,res){
       statsd_send('a_test_value:' + testvalue + '|ms',me.sock,'127.0.0.1',8125,function(){
-          collect_for(me.acceptor,me.myflush,function(strings){
+          collect_for(me.acceptor,me.myflush*2,function(strings){
             test.ok(strings.length > 0,'should receive some data');
             hashes = _.map(strings,function(str){ return JSON.parse(str); });
             var numstat_test = function(post){
