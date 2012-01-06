@@ -1,0 +1,11 @@
+{
+  "name": "statsd",
+  "description": "A nifty little demon to collect metrics",
+  "author": "Etsy (and librato)",
+  "dependencies": {
+    "async": ">= 0.0.0",
+    "base64": ">= 0.0.0",
+    "underscore": ">= 0.0.0"
+  },
+  "engine": "node 0.6.1"
+}
