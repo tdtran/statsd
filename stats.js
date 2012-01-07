@@ -61,7 +61,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       }
 
       if (bits.length == 0) {
-        bits.push("1");
+        return;
       }
 
       for (var i = 0; i < bits.length; i++) {
