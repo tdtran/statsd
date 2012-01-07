@@ -1,4 +1,4 @@
-versionstring = "statsd-librato/1.0"
+versionstring = "statsd-librato/1.1"
 
 var dgram      = require('dgram')
   , sys        = require('sys')
