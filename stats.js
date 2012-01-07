@@ -4,7 +4,6 @@ var dgram      = require('dgram')
   , sys        = require('util')
   , net        = require('net')
   , config     = require('./config')
-  , base64     = require('base64')
   , underscore = require('underscore')
   , async      = require('async')
   , https      = require('https');
@@ -302,7 +301,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
               path: '/v1/metrics.json',
               method: 'POST',
               headers: {
-                "Authorization": 'Basic ' + base64.encode(new Buffer(config.libratoUser + ':' + config.libratoApiKey)),
+                "Authorization": 'Basic ' + new Buffer(config.libratoUser + ':' + config.libratoApiKey, 'base64'),
                 "Content-Length": stats_str.length,
                 "Content-Type": "application/json",
                 "User-Agent" : versionstring
