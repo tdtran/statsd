@@ -1,7 +1,7 @@
 versionstring = "statsd-librato/1.1"
 
 var dgram      = require('dgram')
-  , sys        = require('sys')
+  , sys        = require('util')
   , net        = require('net')
   , config     = require('./config')
   , base64     = require('base64')
