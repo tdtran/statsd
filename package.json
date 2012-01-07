@@ -9,7 +9,7 @@
       "url": "http://librato.com"
     }
   ],
-  "version": "1.1.1",
+  "version": "1.1.2",
   "dependencies": {
     "async": ">= 0.0.0",
     "base64": ">= 0.0.0",
