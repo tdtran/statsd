@@ -12,6 +12,7 @@
   "version": "1.1.5",
   "dependencies": {
     "async": "0.1.5",
+    "syslog": "1.1.1",
     "underscore": "1.2.4"
   },
   "engine": "node 0.6.1"

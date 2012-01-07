@@ -6,8 +6,10 @@ var dgram      = require('dgram')
   , config     = require('./config')
   , underscore = require('underscore')
   , async      = require('async')
-  , https      = require('https');
+  , https      = require('https')
+  , syslog     = require('node-syslog');
 
+syslog.init("node-syslog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL0);
 
 var counters = {};
 var timers = {};
@@ -38,13 +40,15 @@ config.configFile(process.argv[2], function (config, oldConfig) {
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
+      syslog.log(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
     }, config.debugInterval || 10000);
   }
 
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
-      if (config.dumpMessages) { sys.log(msg.toString()); }
+      if (config.dumpMessages) {
+        syslog.log(syslog.LOG_INFO, msg.toString());
+      }
       var bits = msg.toString().split(':');
       var key = '';
       if (graphServiceIs("librato-metrics")){
@@ -64,7 +68,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         var sampleRate = 1;
         var fields = bits[i].split("|");
         if (fields[1] === undefined) {
-            sys.log('Bad line: ' + fields);
+            syslog.log(syslog.LOG_ERR, 'Bad line: ' + fields);
             globalstats['messages']['bad_lines_seen']++;
             continue;
         }
@@ -289,8 +293,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
       async.forEach(strings,function(stats_str,cb){
         if (config.debug) {
-          sys.log(stats_str);
-          sys.log(stats_str.length);
+          syslog.log(LOG_DEBUG, stats_str);
+          syslog.log(LOG_DEBUG, stats_str.length);
         }
 
         if (graphServiceIs("librato-metrics")){
@@ -317,7 +321,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                       submit_to_librato(stats_str,false);
                     }, Math.floor(flushInterval/2) + 100);
                   } else {
-                    sys.log("Error connecting to Librato!\n" + errdata);
+                    syslog.log(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                   }
                 });
               }
@@ -331,7 +335,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                     submit_to_librato(stats_str,false);
                   }, Math.floor(flushInterval/2) + 100);
                 } else {
-                  sys.log("Error connecting to Librato!\n" + errdata);
+                  syslog.log(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                 }
             });
           }
@@ -342,7 +346,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             var graphite = net.createConnection(config.graphitePort, config.graphiteHost);
             graphite.addListener('error', function(connectionException){
                 if (config.debug) {
-                  sys.log(connectionException);
+                  syslog.log(syslog.LOG_CRIT, connectionException);
                 }
             });
             graphite.on('connect', function() {
@@ -352,7 +356,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                 });
           } catch(e){
             if (config.debug) {
-              sys.log(e);
+              syslog.log(syslog.LOG_DEBUG, e);
             }
           }
         }
@@ -361,7 +365,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         if (e){
           globalstats['graphite']['last_exception'] = Math.round(new Date().getTime() / 1000);
           if(config.debug) {
-            sys.log(e);
+            syslog.log(syslog.LOG_DEBUG, e);
           }
         }
       });
