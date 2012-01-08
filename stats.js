@@ -311,7 +311,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
               path: '/v1/metrics.json',
               method: 'POST',
               headers: {
-                "Authorization": 'Basic ' + new Buffer(config.libratoUser + ':' + config.libratoApiKey, 'base64'),
+                "Authorization": 'Basic ' + new Buffer(config.libratoUser + ':' + config.libratoApiKey).toString('base64'),
                 "Content-Length": stats_str.length,
                 "Content-Type": "application/json",
                 "User-Agent" : versionstring
