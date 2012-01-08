@@ -53,7 +53,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         return;
       }
       if (config.dumpMessages) {
-        syslog.log(syslog.LOG_INFO, msg.toString());
+        syslog.log(syslog.LOG_INFO, 'Messages: ' + msg.toString());
       }
       var bits = msg.toString().split(':');
       var key = '';
