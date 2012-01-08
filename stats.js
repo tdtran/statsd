@@ -299,8 +299,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
       async.forEach(strings,function(stats_str,cb){
         if (config.debug) {
-          syslog.log(LOG_DEBUG, stats_str);
-          syslog.log(LOG_DEBUG, stats_str.length);
+          syslog.log(syslog.LOG_DEBUG, stats_str);
+          syslog.log(syslog.LOG_DEBUG, stats_str.length);
         }
 
         if (graphServiceIs("librato-metrics")){
