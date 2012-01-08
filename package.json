@@ -9,7 +9,7 @@
       "url": "http://librato.com"
     }
   ],
-  "version": "1.1.6",
+  "version": "1.1.7",
   "dependencies": {
     "async": "0.1.5",
     "node-syslog": "1.1.1",

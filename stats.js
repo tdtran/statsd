@@ -46,16 +46,17 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
-      if (msg.toString().length == 0) {
+      var msgStr = msg.toString().replace(/^\s+|\s+$/g,"");
+      if (msgStr.length == 0) {
         if (config.debug) {
           syslog.log(syslog.LOG_DEBUG, 'No messsages.');
         }
         return;
       }
       if (config.dumpMessages) {
-        syslog.log(syslog.LOG_INFO, 'Messages: ' + msg.toString());
+        syslog.log(syslog.LOG_INFO, 'Messages: ' + msgStr);
       }
-      var bits = msg.toString().split(':');
+      var bits = msgStr.split(':');
       var key = '';
       if (graphServiceIs("librato-metrics")){
         key = bits.shift().replace(/[^-.:_\w]+/, '_').substr(0,255)
