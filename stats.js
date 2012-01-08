@@ -46,6 +46,12 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
+      if (msg.toString().length == 0) {
+        if (config.debug) {
+          syslog.log(syslog.LOG_DEBUG, 'No messsages.');
+        }
+        return;
+      }
       if (config.dumpMessages) {
         syslog.log(syslog.LOG_INFO, msg.toString());
       }
