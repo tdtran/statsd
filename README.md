@@ -113,7 +113,7 @@ Installation and Configuration
 ------------------------------
 
  * Install node.js
- * Install the 'base64', 'async' and 'underscore' packages via [npm][npm]
+ * Install the 'async', 'temp', 'node-syslog', 'nodeunit' and 'underscore' packages via [npm][npm] (if 'node-syslog' doesn't build for you, try this [workaround](https://gist.github.com/1632460))
  * Clone the project
  * Create a config file from exampleConfig.js and put it somewhere
  * Add connection info for your graphing service to exampleConfig.js
@@ -126,7 +126,7 @@ node stats.js /path/to/config
 Tests
 -----
 
-A test framework has been added using node-unit and some custom code to start and manipulate statsd. Please add tests under test/ for any new features or bug fixes encountered. Testing a live server can be tricky, attempts were made to eliminate race conditions but it may be possible to encounter a stuck state. If doing dev work, a `killall node` will kill any stray test servers in the background (don't do this on a production machine!).
+A test framework has been added using node-unit and some custom code to start and manipulate statsd. Please add tests under test/ for any new features or bug fixes encountered. Testing a live server can be tricky, attempts were made to eliminate race considions but it may be possible to encounter a stuck state. If doing dev work, a `killall node` will kill any stray test servers in the background (don't do this on a production machine!).
 
 Tests can be executd with `./run_tests.sh`.
 

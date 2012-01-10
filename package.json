@@ -9,11 +9,13 @@
       "url": "http://librato.com"
     }
   ],
-  "version": "1.1.7",
+  "version": "1.3.0",
   "dependencies": {
-    "async": "0.1.5",
+    "async": "0.1.15",
     "node-syslog": "1.1.1",
-    "underscore": "1.2.4"
+    "underscore": "1.2.4",
+    "temp": "0.4.0",
+    "nodeunit": "0.6.4"
   },
   "engine": "node 0.6.1"
 }
