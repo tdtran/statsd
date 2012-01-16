@@ -50,7 +50,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
-      var msgStr = msg.toString().replace(/^\s+|\s+$/g,"");
+      var msgStr = msg.toString().replace(/^\s+|\s+$/g,"").replace(/\u0000/g, '');
       if (msgStr.length == 0) {
         if (config.debug) {
           syslog.log(syslog.LOG_DEBUG, 'No messsages.');
