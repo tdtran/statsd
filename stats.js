@@ -36,7 +36,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
     return (config.graphService) && (config.graphService == name);
   }
 
-  if (! config.debug && debugInt) {
+  if (!config.debug && debugInt) {
     clearInterval(debugInt); 
     debugInt = false;
   }
