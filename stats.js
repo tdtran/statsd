@@ -27,6 +27,10 @@ var globalstats = {
   }
 };
 
+process.on('uncaughtException', function (err) {
+  syslog.log(syslog.LOG_ERR, 'Caught exception: ' + err);
+});
+
 config.configFile(process.argv[2], function (config, oldConfig) {
   function graphServiceIs(name){
     return (config.graphService) && (config.graphService == name);
