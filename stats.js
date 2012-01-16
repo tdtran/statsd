@@ -102,6 +102,11 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       globalstats['messages']['last_msg_seen'] = Math.round(new Date().getTime() / 1000);
     });
 
+    server.on("listening", function () {
+      var address = server.address();
+      syslog.log(syslog.LOG_INFO, "statsd is running on " + address.address + ":" + address.port);
+    });
+
     mgmtServer = net.createServer(function(stream) {
       stream.setEncoding('ascii');
 
