@@ -105,6 +105,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
     server.on("listening", function () {
       var address = server.address();
       syslog.log(syslog.LOG_INFO, "statsd is running on " + address.address + ":" + address.port);
+      sys.log("server is up");
     });
 
     mgmtServer = net.createServer(function(stream) {
@@ -165,8 +166,6 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
     server.bind(config.port || 8125);
     mgmtServer.listen(config.mgmt_port || 8126);
-
-    sys.log("server is up");
 
     var flushInterval = Number(config.flushInterval || 10000);
 
