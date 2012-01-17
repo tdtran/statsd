@@ -262,9 +262,13 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             for (k in stats[type]){
               var stat = stats[type][k];
               if (type == "counters"){
-                var per_interval_value = stat["value"] / (flushInterval / 1000);
-                stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
-                stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
+                if(k == 'numStats'){
+                  stats_str += 'statsd.numStats ' + stat['value'] + ' ' + ts + "\n";
+                } else {
+                  var per_interval_value = stat["value"] / (flushInterval / 1000);
+                  stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
+                  stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
+                }
               } else {
                 for (s in stat){
                   stats_str += ('stats.timers.' + k + '.' + s + ' ' + stat[s] + ' ' + ts + "\n");
