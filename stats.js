@@ -167,7 +167,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           stat = stats["counters"];
         }
 
-        var value = counters[key] / (flushInterval / 1000);
+        var value = counters[key];
         stat[key] = {};
         stat[key]["value"] = value;
 
