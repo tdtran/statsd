@@ -50,6 +50,12 @@ There are additional config variables available for debugging:
 
 For more information, check the `exampleConfig.js`.
 
+Logging
+-------
+
+Nominally the output on stdout is kept clean and all system events are logged through syslog.
+If `debug` is set, all output is redirected to stdout/stderr accordingly.
+
 Guts
 ----
 

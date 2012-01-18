@@ -9,7 +9,13 @@ var dgram      = require('dgram')
   , https      = require('https')
   , syslog     = require('node-syslog');
 
-syslog.init("node-syslog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL0);
+var logger = function(severity,message){
+  if(severity < syslog.LOG_NOTICE){
+    console.error(message);
+  } else {
+    console.log(message);
+  }
+}
 
 var counters = {};
 var timers = {};
@@ -28,10 +34,18 @@ var globalstats = {
 };
 
 process.on('uncaughtException', function (err) {
-  syslog.log(syslog.LOG_ERR, 'Caught exception: ' + err);
+  logger(syslog.LOG_ERR, 'Caught exception: ' + err);
 });
 
 config.configFile(process.argv[2], function (config, oldConfig) {
+  if (config.debug){
+    sys.log('logging to stdout/err');
+  } else {
+    syslog.init("node-syslog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL0);
+    sys.log('logging to syslog');
+    logger = syslog.log;
+  }
+
   function graphServiceIs(name){
     return (config.graphService) && (config.graphService == name);
   }
@@ -44,7 +58,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      syslog.log(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
+      logger(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
     }, config.debugInterval || 10000);
   }
 
@@ -53,12 +67,12 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       var msgStr = msg.toString().replace(/^\s+|\s+$/g,"").replace(/\u0000/g, '');
       if (msgStr.length == 0) {
         if (config.debug) {
-          syslog.log(syslog.LOG_DEBUG, 'No messsages.');
+          logger(syslog.LOG_DEBUG, 'No messsages.');
         }
         return;
       }
       if (config.dumpMessages) {
-        syslog.log(syslog.LOG_INFO, 'Messages: ' + msgStr);
+        logger(syslog.LOG_INFO, 'Messages: ' + msgStr);
       }
       var bits = msgStr.split(':');
       var key = '';
@@ -79,7 +93,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         var sampleRate = 1;
         var fields = bits[i].split("|");
         if (fields[1] === undefined) {
-            syslog.log(syslog.LOG_ERR, 'Bad line: ' + fields);
+            logger(syslog.LOG_ERR, 'Bad line: ' + fields);
             globalstats['messages']['bad_lines_seen']++;
             continue;
         }
@@ -104,7 +118,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
     server.on("listening", function () {
       var address = server.address();
-      syslog.log(syslog.LOG_INFO, "statsd is running on " + address.address + ":" + address.port);
+      logger(syslog.LOG_INFO, "statsd is running on " + address.address + ":" + address.port);
       sys.log("server is up");
     });
 
@@ -314,8 +328,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
       async.forEach(strings,function(stats_str,cb){
         if (config.debug) {
-          syslog.log(syslog.LOG_DEBUG, stats_str);
-          syslog.log(syslog.LOG_DEBUG, stats_str.length);
+          logger(syslog.LOG_DEBUG, stats_str);
+          logger(syslog.LOG_DEBUG, stats_str.length);
         }
 
         if (graphServiceIs("librato-metrics")){
@@ -342,7 +356,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                       submit_to_librato(stats_str,false);
                     }, Math.floor(flushInterval/2) + 100);
                   } else {
-                    syslog.log(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
+                    logger(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                   }
                 });
               }
@@ -356,7 +370,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                     submit_to_librato(stats_str,false);
                   }, Math.floor(flushInterval/2) + 100);
                 } else {
-                  syslog.log(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
+                  logger(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                 }
             });
           }
@@ -367,7 +381,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             var graphite = net.createConnection(config.graphitePort, config.graphiteHost);
             graphite.addListener('error', function(connectionException){
                 if (config.debug) {
-                  syslog.log(syslog.LOG_CRIT, connectionException);
+                  logger(syslog.LOG_CRIT, connectionException);
                 }
             });
             graphite.on('connect', function() {
@@ -377,7 +391,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                 });
           } catch(e){
             if (config.debug) {
-              syslog.log(syslog.LOG_DEBUG, e);
+              logger(syslog.LOG_DEBUG, e);
             }
           }
         }
@@ -386,7 +400,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         if (e){
           globalstats['graphite']['last_exception'] = Math.round(new Date().getTime() / 1000);
           if(config.debug) {
-            syslog.log(syslog.LOG_DEBUG, e);
+            logger(syslog.LOG_DEBUG, e);
           }
         }
       });
