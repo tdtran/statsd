@@ -1,14 +1,21 @@
-versionstring = "statsd-librato/1.0"
+versionstring = "statsd-librato/1.1"
 
 var dgram      = require('dgram')
-  , sys        = require('sys')
+  , sys        = require('util')
   , net        = require('net')
   , config     = require('./config')
-  , base64     = require('base64')
   , underscore = require('underscore')
   , async      = require('async')
-  , https      = require('https');
+  , https      = require('https')
+  , syslog     = require('node-syslog');
 
+var logger = function(severity,message){
+  if(severity < syslog.LOG_NOTICE){
+    console.error(message);
+  } else {
+    console.log(message);
+  }
+}
 
 var counters = {};
 var timers = {};
@@ -26,12 +33,24 @@ var globalstats = {
   }
 };
 
+process.on('uncaughtException', function (err) {
+  logger(syslog.LOG_ERR, 'Caught exception: ' + err);
+});
+
 config.configFile(process.argv[2], function (config, oldConfig) {
+  if (config.debug){
+    sys.log('logging to stdout/err');
+  } else {
+    syslog.init("node-syslog", syslog.LOG_PID | syslog.LOG_ODELAY, syslog.LOG_LOCAL0);
+    sys.log('logging to syslog');
+    logger = syslog.log;
+  }
+
   function graphServiceIs(name){
     return (config.graphService) && (config.graphService == name);
   }
 
-  if (! config.debug && debugInt) {
+  if (!config.debug && debugInt) {
     clearInterval(debugInt); 
     debugInt = false;
   }
@@ -39,14 +58,23 @@ config.configFile(process.argv[2], function (config, oldConfig) {
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      sys.log("Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
+      logger(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
     }, config.debugInterval || 10000);
   }
 
   if (server === undefined) {
     server = dgram.createSocket('udp4', function (msg, rinfo) {
-      if (config.dumpMessages) { sys.log(msg.toString()); }
-      var bits = msg.toString().split(':');
+      var msgStr = msg.toString().replace(/^\s+|\s+$/g,"").replace(/\u0000/g, '');
+      if (msgStr.length == 0) {
+        if (config.debug) {
+          logger(syslog.LOG_DEBUG, 'No messsages.');
+        }
+        return;
+      }
+      if (config.dumpMessages) {
+        logger(syslog.LOG_INFO, 'Messages: ' + msgStr);
+      }
+      var bits = msgStr.split(':');
       var key = '';
       if (graphServiceIs("librato-metrics")){
         key = bits.shift().replace(/[^-.:_\w]+/, '_').substr(0,255)
@@ -58,14 +86,14 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       }
 
       if (bits.length == 0) {
-        bits.push("1");
+        return;
       }
 
       for (var i = 0; i < bits.length; i++) {
         var sampleRate = 1;
         var fields = bits[i].split("|");
         if (fields[1] === undefined) {
-            sys.log('Bad line: ' + fields);
+            logger(syslog.LOG_ERR, 'Bad line: ' + fields);
             globalstats['messages']['bad_lines_seen']++;
             continue;
         }
@@ -86,6 +114,12 @@ config.configFile(process.argv[2], function (config, oldConfig) {
       }
 
       globalstats['messages']['last_msg_seen'] = Math.round(new Date().getTime() / 1000);
+    });
+
+    server.on("listening", function () {
+      var address = server.address();
+      logger(syslog.LOG_INFO, "statsd is running on " + address.address + ":" + address.port);
+      sys.log("server is up");
     });
 
     mgmtServer = net.createServer(function(stream) {
@@ -165,7 +199,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
           stat = stats["counters"];
         }
 
-        var value = counters[key] / (flushInterval / 1000);
+        var value = counters[key];
         stat[key] = {};
         stat[key]["value"] = value;
 
@@ -260,9 +294,13 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             for (k in stats[type]){
               var stat = stats[type][k];
               if (type == "counters"){
-                var per_interval_value = stat["value"] / (flushInterval / 1000);
-                stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
-                stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
+                if(k == 'numStats'){
+                  stats_str += 'statsd.numStats ' + stat['value'] + ' ' + ts + "\n";
+                } else {
+                  var per_interval_value = stat["value"] / (flushInterval / 1000);
+                  stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
+                  stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
+                }
               } else {
                 for (s in stat){
                   stats_str += ('stats.timers.' + k + '.' + s + ' ' + stat[s] + ' ' + ts + "\n");
@@ -290,8 +328,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
       async.forEach(strings,function(stats_str,cb){
         if (config.debug) {
-          sys.log(stats_str);
-          sys.log(stats_str.length);
+          logger(syslog.LOG_DEBUG, stats_str);
+          logger(syslog.LOG_DEBUG, stats_str.length);
         }
 
         if (graphServiceIs("librato-metrics")){
@@ -302,7 +340,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
               path: '/v1/metrics.json',
               method: 'POST',
               headers: {
-                "Authorization": 'Basic ' + base64.encode(new Buffer(config.libratoUser + ':' + config.libratoApiKey)),
+                "Authorization": 'Basic ' + new Buffer(config.libratoUser + ':' + config.libratoApiKey).toString('base64'),
                 "Content-Length": stats_str.length,
                 "Content-Type": "application/json",
                 "User-Agent" : versionstring
@@ -318,7 +356,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                       submit_to_librato(stats_str,false);
                     }, Math.floor(flushInterval/2) + 100);
                   } else {
-                    sys.log("Error connecting to Librato!\n" + errdata);
+                    logger(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                   }
                 });
               }
@@ -332,7 +370,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                     submit_to_librato(stats_str,false);
                   }, Math.floor(flushInterval/2) + 100);
                 } else {
-                  sys.log("Error connecting to Librato!\n" + errdata);
+                  logger(syslog.LOG_CRIT, "Error connecting to Librato!\n" + errdata);
                 }
             });
           }
@@ -343,7 +381,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             var graphite = net.createConnection(config.graphitePort, config.graphiteHost);
             graphite.addListener('error', function(connectionException){
                 if (config.debug) {
-                  sys.log(connectionException);
+                  logger(syslog.LOG_CRIT, connectionException);
                 }
             });
             graphite.on('connect', function() {
@@ -353,7 +391,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                 });
           } catch(e){
             if (config.debug) {
-              sys.log(e);
+              logger(syslog.LOG_DEBUG, e);
             }
           }
         }
@@ -362,7 +400,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         if (e){
           globalstats['graphite']['last_exception'] = Math.round(new Date().getTime() / 1000);
           if(config.debug) {
-            sys.log(e);
+            logger(syslog.LOG_DEBUG, e);
           }
         }
       });
