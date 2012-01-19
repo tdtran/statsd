@@ -21,6 +21,7 @@ var logger = function(severity,message){
 
 var counters = {};
 var timers = {};
+var gauges = {};
 var debugInt, flushInt, server, mgmtServer;
 var startup_time = Math.round(new Date().getTime() / 1000);
 
@@ -97,6 +98,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             timers[key] = [];
           }
           timers[key].push(Number(fields[0] || 0));
+        } else if (fields[1].trim() === "g") {
+          gauges[key] = Number(fields[0] || 0);
         } else {
           if (fields[2] && fields[2].match(/^@([\d\.]+)/)) {
             sampleRate = Number(fields[2].match(/^@([\d\.]+)/)[1]);
@@ -125,7 +128,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
 
         switch(cmd) {
           case "help":
-            stream.write("Commands: stats, counters, timers, quit\n\n");
+            stream.write("Commands: stats, counters, gauges, timers, quit\n\n");
             break;
 
           case "stats":
@@ -161,6 +164,11 @@ config.configFile(process.argv[2], function (config, oldConfig) {
             stream.write("END\n\n");
             break;
 
+          case "gauges":
+            stream.write(sys.inspect(gauges) + "\n");
+            stream.write("END\n\n");
+            break;
+          
           case "quit":
             stream.end();
             break;
@@ -199,6 +207,19 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         numStats += 1;
       }
 
+      for (key in gauges) {
+        var stat;
+        stat = stats["gauges"];
+
+        var value = gauges[key];
+        stat[key] = {};
+        stat[key]["value"] = value;
+
+        //gauges[key] = 0;
+
+        numStats += 1;
+      }
+      
       for (key in timers) {
         if (timers[key].length > 0) {
           var pctThreshold = config.percentThreshold || 90;
