@@ -336,9 +336,11 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                   stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
                   stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
                 }
+              } else if (type == "gauges") {
+                stats_str += ('stats.' + k + ' ' + stat['value'] + ' ' + ts + "\n");
               } else {
                 for (s in stat){
-                  stats_str += ('stats.timers.' + k + '.' + s + ' ' + stat[s] + ' ' + ts + "\n");
+                  stats_str += ('stats_timers.' + k + '.' + s + ' ' + stat[s] + ' ' + ts + "\n");
                 }
               }
             }
