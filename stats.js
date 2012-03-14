@@ -61,7 +61,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
   if (config.debug) {
     if (debugInt !== undefined) { clearInterval(debugInt); }
     debugInt = setInterval(function () { 
-      logger(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nTimers:\n" + sys.inspect(timers));
+      logger(syslog.LOG_INFO, "Counters:\n" + sys.inspect(counters) + "\nGauges:\n" + sys.inspect(gauges) + "\nTimers:\n" + sys.inspect(timers));
     }, config.debugInterval || 10000);
   }
 
@@ -215,7 +215,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         stat[key] = {};
         stat[key]["value"] = value;
 
-        //gauges[key] = 0;
+        gauges[key] = 0;
 
         numStats += 1;
       }
@@ -331,13 +331,15 @@ config.configFile(process.argv[2], function (config, oldConfig) {
               if (type == "counters"){
                 if(k == 'numStats'){
                   stats_str += 'statsd.numStats ' + stat['value'] + ' ' + ts + "\n";
-                } else {
+                } else if (stat["value"] > 0){
                   var per_interval_value = stat["value"] / (flushInterval / 1000);
                   stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
-                  stats_str += ('stats_counts.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
+                  stats_str += ('stats.counters.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
                 }
               } else if (type == "gauges") {
-                stats_str += ('stats.gauges.' + k + ' ' + stat['value'] + ' ' + ts + "\n");
+                if (stat["value"] > 0){
+                  stats_str += ('stats.gauges.' + k + ' ' + stat['value'] + ' ' + ts + "\n");
+                }
               } else {
                 for (s in stat){
                   stats_str += ('stats.timers.' + k + '.' + s + ' ' + stat[s] + ' ' + ts + "\n");
