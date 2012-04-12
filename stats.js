@@ -332,8 +332,6 @@ config.configFile(process.argv[2], function (config, oldConfig) {
                 if(k == 'numStats'){
                   stats_str += 'statsd.numStats ' + stat['value'] + ' ' + ts + "\n";
                 } else if (stat["value"] > 0){
-                  var per_interval_value = stat["value"] / (flushInterval / 1000);
-                  stats_str += ('stats.' + k + ' ' + per_interval_value + ' ' + ts + "\n");
                   stats_str += ('stats.counters.' + k + ' ' + stat["value"] + ' ' + ts + "\n");
                 }
               } else if (type == "gauges") {
