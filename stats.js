@@ -37,7 +37,9 @@ var globalstats = {
 };
 
 process.on('uncaughtException', function (err) {
-  logger(syslog.LOG_ERR, 'Caught exception: ' + err);
+  logger(syslog.LOG_ERR, 'Caught exception: ' + err.stack);
+  logger(syslog.LOG_ERR, 'Aborting server...');
+  process.exit(1);
 });
 
 config.configFile(process.argv[2], function (config, oldConfig) {
