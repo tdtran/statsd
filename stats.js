@@ -217,7 +217,7 @@ config.configFile(process.argv[2], function (config, oldConfig) {
         stat[key] = {};
         stat[key]["value"] = value;
 
-        // gauges[key] = 0;
+        delete gauges[key];
 
         numStats += 1;
       }
