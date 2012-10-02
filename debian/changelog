@@ -1,3 +1,9 @@
+statsd (0.0.2) unstable; urgency=low
+
+  * Bumped version number
+
+ -- Trung Duc Tran <trung@estately.com> Tue, 2 Oct 2012 22:07:34 +0200
+
 statsd (0.0.1) unstable; urgency=low
 
   * Initial rdio packaging.
